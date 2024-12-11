@@ -1,0 +1,65 @@
+from flask import Flask, request, jsonify
+import sqlite3
+
+app = Flask(__name__)
+
+# Database Connection
+def connect_db():
+    conn = sqlite3.connect('transport.db')  # Ensure that your SQLite DB file is correctly named and in the right path
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Create a Bus (Post a new bus route)
+@app.route('/buses', methods=['POST'])
+def add_bus():
+    try:
+        data = request.json
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO buses (bus_number, bus_type, capacity, status, route) VALUES (?, ?, ?, ?, ?)",
+                       (data['bus_number'], data['bus_type'], data['capacity'], data['status'], data['route']))
+        conn.commit()
+        return jsonify({'message': 'Bus added successfully'}), 201
+    except Exception as e:
+        return jsonify({'message': 'Error adding bus', 'error': str(e)}), 400
+
+# Read Buses (Get all buses and routes)
+@app.route('/buses', methods=['GET'])
+def get_buses():
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM buses")
+        buses = cursor.fetchall()
+        return jsonify([dict(bus) for bus in buses])
+    except Exception as e:
+        return jsonify({'message': 'Error fetching buses', 'error': str(e)}), 400
+
+# Update a Bus (Update details of a bus route)
+@app.route('/buses/<int:bus_id>', methods=['PUT'])
+def update_bus(bus_id):
+    try:
+        data = request.json
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE buses SET bus_number=?, bus_type=?, capacity=?, status=?, route=? WHERE bus_id=?",
+                       (data['bus_number'], data['bus_type'], data['capacity'], data['status'], data['route'], bus_id))
+        conn.commit()
+        return jsonify({'message': 'Bus updated successfully'})
+    except Exception as e:
+        return jsonify({'message': 'Error updating bus', 'error': str(e)}), 400
+
+# Delete a Bus (Remove a bus route)
+@app.route('/buses/<int:bus_id>', methods=['DELETE'])
+def delete_bus(bus_id):
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM buses WHERE bus_id=?", (bus_id,))
+        conn.commit()
+        return jsonify({'message': 'Bus deleted successfully'})
+    except Exception as e:
+        return jsonify({'message': 'Error deleting bus', 'error': str(e)}), 400
+
+if __name__ == '__main__':
+    app.run(debug=True)

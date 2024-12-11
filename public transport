@@ -1,0 +1,53 @@
+from flask import Flask, request, jsonify
+import sqlite3
+
+app = Flask(__name__)
+
+# Database Connection
+def connect_db():
+    conn = sqlite3.connect('transport.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Create a Bus
+@app.route('/buses', methods=['POST'])
+def add_bus():
+    data = request.json
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO buses (bus_number, bus_type, capacity, status) VALUES (?, ?, ?, ?)",
+                   (data['bus_number'], data['bus_type'], data['capacity'], data['status']))
+    conn.commit()
+    return jsonify({'message': 'Bus added successfully'}), 201
+
+# Read Buses
+@app.route('/buses', methods=['GET'])
+def get_buses():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM buses")
+    buses = cursor.fetchall()
+    return jsonify([dict(bus) for bus in buses])
+
+# Update a Bus
+@app.route('/buses/<int:bus_id>', methods=['PUT'])
+def update_bus(bus_id):
+    data = request.json
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE buses SET bus_number=?, bus_type=?, capacity=?, status=? WHERE bus_id=?",
+                   (data['bus_number'], data['bus_type'], data['capacity'], data['status'], bus_id))
+    conn.commit()
+    return jsonify({'message': 'Bus updated successfully'})
+
+# Delete a Bus
+@app.route('/buses/<int:bus_id>', methods=['DELETE'])
+def delete_bus(bus_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM buses WHERE bus_id=?", (bus_id,))
+    conn.commit()
+    return jsonify({'message': 'Bus deleted successfully'})
+
+if __name__ == '__main__':
+    app.run(debug=True)

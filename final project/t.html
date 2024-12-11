@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Management System</title>
+    <script>
+        // Function to fetch all buses
+        function fetchBuses() {
+            fetch('/buses')
+                .then(response => response.json())
+                .then(data => {
+                    const busList = document.getElementById('bus-list');
+                    busList.innerHTML = '';
+                    data.forEach(bus => {
+                        busList.innerHTML += `
+                            <tr>
+                                <td>${bus.bus_id}</td>
+                                <td>${bus.bus_number}</td>
+                                <td>${bus.bus_type}</td>
+                                <td>${bus.capacity}</td>
+                                <td>${bus.status}</td>
+                                <td>
+                                    <button onclick="editBus(${bus.bus_id})">Edit</button>
+                                    <button onclick="deleteBus(${bus.bus_id})">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                });
+        }
+
+        // Function to add a new bus
+        function addBus() {
+            const busNumber = document.getElementById('bus_number').value;
+            const busType = document.getElementById('bus_type').value;
+            const capacity = document.getElementById('capacity').value;
+            const status = document.getElementById('status').value;
+
+            const newBus = {
+                bus_number: busNumber,
+                bus_type: busType,
+                capacity: capacity,
+                status: status
+            };
+
+            fetch('/buses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newBus)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                fetchBuses(); // Refresh the bus list
+            });
+        }
+
+        // Function to edit a bus
+        function editBus(busId) {
+            const busNumber = prompt("Enter new bus number:");
+            const busType = prompt("Enter new bus type:");
+            const capacity = prompt("Enter new capacity:");
+            const status = prompt("Enter new status:");
+
+            const updatedBus = {
+                bus_number: busNumber,
+                bus_type: busType,
+                capacity: capacity,
+                status: status
+            };
+
+            fetch(`/buses/${busId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedBus)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                fetchBuses(); // Refresh the bus list
+            });
+        }
+
+        // Function to delete a bus
+        function deleteBus(busId) {
+            fetch(`/buses/${busId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                fetchBuses(); // Refresh the bus list
+            });
+        }
+
+        // Fetch buses on page load
+        window.onload = fetchBuses;
+    </script>
+</head>
+<body>
+    <h1>Bus Management System</h1>
+    
+    <!-- Add Bus Form -->
+    <h2>Add New Bus</h2>
+    <form onsubmit="event.preventDefault(); addBus();">
+        <label for="bus_number">Bus Number:</label>
+        <input type="text" id="bus_number" required><br>
+        
+        <label for="bus_type">Bus Type:</label>
+        <input type="text" id="bus_type" required><br>
+        
+        <label for="capacity">Capacity:</label>
+        <input type="number" id="capacity" required><br>
+        
+        <label for="status">Status:</label>
+        <input type="text" id="status" required><br>
+        
+        <button type="submit">Add Bus</button>
+    </form>
+
+    <!-- Bus List -->
+    <h2>Bus List</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Bus ID</th>
+                <th>Bus Number</th>
+                <th>Bus Type</th>
+                <th>Capacity</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="bus-list">
+            <!-- Bus data will be populated here -->
+        </tbody>
+    </table>
+</body>
+</html>
