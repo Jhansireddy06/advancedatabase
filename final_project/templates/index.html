@@ -19,6 +19,10 @@
                                 <td>${bus.bus_number}</td>
                                 <td>${bus.bus_type}</td>
                                 <td>${bus.capacity}</td>
+                                <td>${bus.route_id}</td>
+                                <td>${bus.route_name}</td>
+                                <td>${bus.start_location}</td>
+                                <td>${bus.end_location}</td>
                                 <td>${bus.status}</td>
                                 <td>
                                     <button onclick="editBus(${bus.bus_id})">Edit</button>
@@ -30,18 +34,45 @@
                 });
         }
 
+
+        // Function to fetch all routes and populate the dropdown
+        function fetchRoutes() {
+            fetch('/routes')
+                .then(response => response.json())
+                .then(data => {
+                    const routeSelect = document.getElementById('route_id');
+                    routeSelect.innerHTML = ''; // Clear previous options
+                    data.forEach(route => {
+                        routeSelect.innerHTML += `
+                            <option value="${route.route_id}">${route.route_name} (${route.start_location} - ${route.end_location})</option>
+                        `;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching routes:', error);
+                });
+        }
+
         // Function to add a new bus
         function addBus() {
             const busNumber = document.getElementById('bus_number').value;
             const busType = document.getElementById('bus_type').value;
             const capacity = document.getElementById('capacity').value;
             const status = document.getElementById('status').value;
+            const routeId = document.getElementById('route_id').value;
+            const routeName = document.getElementById('route_name').value;
+            const startLocation = document.getElementById('start_loaction').value;
+            const endLocation = document.getElementById('end_location').value;
 
             const newBus = {
                 bus_number: busNumber,
                 bus_type: busType,
                 capacity: capacity,
-                status: status
+                status: status,
+                route_id: routeId,
+                route_name: routeName,
+                start_location: startLocation,
+                end_location: endLocation
             };
 
             fetch('/buses', {
@@ -62,12 +93,20 @@
             const busType = prompt("Enter new bus type:");
             const capacity = prompt("Enter new capacity:");
             const status = prompt("Enter new status:");
+            const routeId = prompt("Enter new route ID:");
+            const routeName = prompt("Enter new route name:");
+            const startLocation = prompt("Enter new strat location:");
+            const endLocation= prompt("Enter new end location");
 
             const updatedBus = {
                 bus_number: busNumber,
                 bus_type: busType,
                 capacity: capacity,
-                status: status
+                status: status,
+                route_id: routeId,
+                route_name: routeName,
+                start_location: startLocation,
+                end_location: endLocation
             };
 
             fetch(`/buses/${busId}`, {
@@ -94,8 +133,11 @@
             });
         }
 
-        // Fetch buses on page load
-        window.onload = fetchBuses;
+        // Fetch buses and routes on page load
+        window.onload = function() {
+            fetchBuses();
+            // Fetch and populate routes dropdown
+        };
     </script>
 </head>
 <body>
@@ -112,9 +154,25 @@
         
         <label for="capacity">Capacity:</label>
         <input type="number" id="capacity" required><br>
-        
+                    
         <label for="status">Status:</label>
-        <input type="text" id="status" required><br>
+        <select id="status" required>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+        </select><br>
+
+        <label for="route_id">Route ID:</label>
+        <input type="integer" id="route_id" required><br>
+
+        <label for="route_name">Route Name:</label>
+        <input type="text" id="route_name" required><br>
+
+        <label for="start_loaction">Start Location:</label>
+        <input type="text" id="start_loaction" required><br>
+
+        <label for="end_location">End Location</label>
+        <input type="text" id="end_location" required><br>
+             
         
         <button type="submit">Add Bus</button>
     </form>
@@ -128,8 +186,13 @@
                 <th>Bus Number</th>
                 <th>Bus Type</th>
                 <th>Capacity</th>
+                <th>Route ID</th>
+                <th>Route Name</th>
+                <th>Start Location</th>
+                <th>End Location</th>
                 <th>Status</th>
                 <th>Actions</th>
+                
             </tr>
         </thead>
         <tbody id="bus-list">
